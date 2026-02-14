@@ -1,23 +1,20 @@
 require("dotenv").config();
 const express = require("express");
-const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { MongoClient, ObjectId } = require("mongodb");
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 5000;
 
-// MongoDB Client
 let db;
 const mongoClient = new MongoClient(process.env.MONGODB_URI);
 
-// Connect to MongoDB
 async function connectDB() {
   try {
     await mongoClient.connect();
-    db = mongoClient.db(process.env.DB_NAME || "travlog");
+    db = mongoClient.db("petcare");
     console.log("✅ MongoDB Connected");
   } catch (error) {
     console.error("❌ MongoDB Connection Error:", error);
@@ -27,381 +24,217 @@ async function connectDB() {
 
 connectDB();
 
-// Middleware
-app.use(cors({
-  origin: ["http://localhost:5173"],
-  credentials: true,
-}));
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-
-// ==============================================
-// HELPER FUNCTIONS
-// ==============================================
-
-function createToken(userId) {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
-}
-
-function verifyToken(token) {
-  try {
-    return jwt.verify(token, process.env.JWT_SECRET);
-  } catch (error) {
-    return null;
-  }
-}
-
-function getCookieOptions() {
-  return {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  };
-}
-
-function getRandomAvatar() {
-  const styles = ["adventurer", "big-smile", "fun-emoji", "lorelei", "micah"];
-  const style = styles[Math.floor(Math.random() * styles.length)];
-  const seed = Date.now() + Math.random();
-  return `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}`;
-}
 
 // ==============================================
 // AUTH ROUTES
 // ==============================================
 
-// REGISTER
 app.post("/api/auth/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ error: "All fields are required" });
+      return res.status(400).json({ error: "All fields required" });
     }
 
     const usersCollection = db.collection("users");
-    
-    const existingUser = await usersCollection.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: "User already exists" });
+    const existing = await usersCollection.findOne({ email });
+
+    if (existing) {
+      return res.status(400).json({ error: "Email already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
-    
-    const newUser = {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const result = await usersCollection.insertOne({
       name,
       email,
       password: hashedPassword,
-      avatar: getRandomAvatar(),
       createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    });
 
-    const result = await usersCollection.insertOne(newUser);
-    const userId = result.insertedId;
-
-    const token = createToken(userId);
-    res.cookie("token", token, getCookieOptions());
+    const token = jwt.sign({ id: result.insertedId }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
     res.status(201).json({
-      message: "User registered successfully",
-      user: {
-        _id: userId,
-        name: newUser.name,
-        email: newUser.email,
-        avatar: newUser.avatar,
-      },
+      token,
+      user: { _id: result.insertedId, name, email },
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// LOGIN
 app.post("/api/auth/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
+      return res.status(400).json({ error: "All fields required" });
     }
 
     const usersCollection = db.collection("users");
     const user = await usersCollection.findOne({ email });
 
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    if (!passwordMatch) {
-      return res.status(401).json({ error: "Invalid password" });
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const token = createToken(user._id);
-    res.cookie("token", token, getCookieOptions());
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
     res.status(200).json({
-      message: "Login successful",
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-      },
+      token,
+      user: { _id: user._id, name: user.name, email: user.email },
     });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// GET PROFILE
-app.get("/api/auth/profile", async (req, res) => {
-  try {
-    const token = req.cookies.token;
-
-    if (!token) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const payload = verifyToken(token);
-    if (!payload) {
-      return res.status(401).json({ error: "Invalid token" });
-    }
-
-    const usersCollection = db.collection("users");
-    const user = await usersCollection.findOne({ _id: new ObjectId(payload.id) });
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    res.status(200).json({
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// LOGOUT
-app.post("/api/auth/logout", async (req, res) => {
-  try {
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
-    res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // ==============================================
-// TRAVEL LOG ROUTES (ALL REQUIRE AUTH)
+// SERVICE ROUTES (CRUD)
 // ==============================================
 
-// Middleware to check auth for travel logs
-async function requireAuth(req, res, next) {
+function verifyToken(req, res, next) {
   try {
-    const token = req.cookies.token;
+    const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return res.status(401).json({ error: "No token provided" });
     }
 
-    const payload = verifyToken(token);
-    if (!payload) {
-      return res.status(401).json({ error: "Invalid token" });
-    }
-
-    const usersCollection = db.collection("users");
-    const user = await usersCollection.findOne({ _id: new ObjectId(payload.id) });
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    req.userId = user._id;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.id;
     next();
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(401).json({ error: "Invalid token" });
   }
 }
 
-// CREATE TRAVEL LOG
-app.post("/api/travel-logs", requireAuth, async (req, res) => {
+app.get("/api/services", async (req, res) => {
   try {
-    const { title, location, description, travelDate, imageUrl } = req.body;
+    const servicesCollection = db.collection("services");
+    const services = await servicesCollection.find({}).toArray();
+    res.json(services);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-    if (!title || !location || !description || !travelDate) {
-      return res.status(400).json({ error: "All required fields must be provided" });
+app.get("/api/services/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const servicesCollection = db.collection("services");
+    const service = await servicesCollection.findOne({ _id: new ObjectId(id) });
+
+    if (!service) {
+      return res.status(404).json({ error: "Service not found" });
     }
 
-    const logsCollection = db.collection("travel-logs");
+    res.json(service);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-    const newLog = {
-      user: req.userId,
-      title,
-      location,
+app.post("/api/services", verifyToken, async (req, res) => {
+  try {
+    const { name, description, price, duration, category } = req.body;
+
+    if (!name || !description || !price || !duration || !category) {
+      return res.status(400).json({ error: "All fields required" });
+    }
+
+    const servicesCollection = db.collection("services");
+
+    const newService = {
+      name,
       description,
-      travelDate: new Date(travelDate),
-      imageUrl: imageUrl || "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600&q=80",
+      price: parseFloat(price),
+      duration,
+      category,
+      userId: new ObjectId(req.userId),
       createdAt: new Date(),
-      updatedAt: new Date(),
     };
 
-    const result = await logsCollection.insertOne(newLog);
+    const result = await servicesCollection.insertOne(newService);
 
-    res.status(201).json({
-      message: "Travel log created",
-      data: { _id: result.insertedId, ...newLog },
-    });
+    res.status(201).json({ _id: result.insertedId, ...newService });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// GET ALL TRAVEL LOGS FOR USER
-app.get("/api/travel-logs", requireAuth, async (req, res) => {
-  try {
-    const logsCollection = db.collection("travel-logs");
-
-    const logs = await logsCollection
-      .find({ user: req.userId })
-      .sort({ travelDate: -1 })
-      .toArray();
-
-    res.status(200).json({
-      message: "Travel logs retrieved",
-      data: logs,
-      count: logs.length,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// GET SINGLE TRAVEL LOG
-app.get("/api/travel-logs/:id", requireAuth, async (req, res) => {
+app.put("/api/services/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
+    const { name, description, price, duration, category } = req.body;
 
-    const logsCollection = db.collection("travel-logs");
-    const log = await logsCollection.findOne({ _id: new ObjectId(id) });
+    const servicesCollection = db.collection("services");
+    const service = await servicesCollection.findOne({ _id: new ObjectId(id) });
 
-    if (!log) {
-      return res.status(404).json({ error: "Travel log not found" });
+    if (!service) {
+      return res.status(404).json({ error: "Service not found" });
     }
 
-    if (log.user.toString() !== req.userId.toString()) {
+    if (service.userId.toString() !== req.userId.toString()) {
       return res.status(403).json({ error: "Access denied" });
     }
 
-    res.status(200).json({
-      message: "Travel log retrieved",
-      data: log,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// UPDATE TRAVEL LOG
-app.put("/api/travel-logs/:id", requireAuth, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { title, location, description, travelDate, imageUrl } = req.body;
-
-    const logsCollection = db.collection("travel-logs");
-    const log = await logsCollection.findOne({ _id: new ObjectId(id) });
-
-    if (!log) {
-      return res.status(404).json({ error: "Travel log not found" });
-    }
-
-    if (log.user.toString() !== req.userId.toString()) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    const updates = {
-      updatedAt: new Date(),
-    };
-
-    if (title) updates.title = title;
-    if (location) updates.location = location;
+    const updates = {};
+    if (name) updates.name = name;
     if (description) updates.description = description;
-    if (travelDate) updates.travelDate = new Date(travelDate);
-    if (imageUrl !== undefined) updates.imageUrl = imageUrl;
+    if (price) updates.price = parseFloat(price);
+    if (duration) updates.duration = duration;
+    if (category) updates.category = category;
 
-    await logsCollection.updateOne(
+    await servicesCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: updates }
     );
 
-    const updatedLog = await logsCollection.findOne({ _id: new ObjectId(id) });
+    const updated = await servicesCollection.findOne({ _id: new ObjectId(id) });
 
-    res.status(200).json({
-      message: "Travel log updated",
-      data: updatedLog,
-    });
+    res.json(updated);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// DELETE TRAVEL LOG
-app.delete("/api/travel-logs/:id", requireAuth, async (req, res) => {
+app.delete("/api/services/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const logsCollection = db.collection("travel-logs");
-    const log = await logsCollection.findOne({ _id: new ObjectId(id) });
+    const servicesCollection = db.collection("services");
+    const service = await servicesCollection.findOne({ _id: new ObjectId(id) });
 
-    if (!log) {
-      return res.status(404).json({ error: "Travel log not found" });
+    if (!service) {
+      return res.status(404).json({ error: "Service not found" });
     }
 
-    if (log.user.toString() !== req.userId.toString()) {
+    if (service.userId.toString() !== req.userId.toString()) {
       return res.status(403).json({ error: "Access denied" });
     }
 
-    await logsCollection.deleteOne({ _id: new ObjectId(id) });
+    await servicesCollection.deleteOne({ _id: new ObjectId(id) });
 
-    res.status(200).json({
-      message: "Travel log deleted",
-    });
+    res.json({ message: "Service deleted" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// ==============================================
-// HEALTH CHECK
-// ==============================================
-
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "success",
-    message: "Backend API is running",
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// 404 Handler
-app.use((req, res) => {
-  res.status(404).json({ error: "Route not found" });
-});
-
-// Start Server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on PORT: ${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

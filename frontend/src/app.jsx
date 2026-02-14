@@ -1,73 +1,58 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import LoginPage from "./login-page";
-import RegisterPage from "./register-page";
-import DashboardPage from "./dashboard-page";
-import MyLogsPage from "./my-logs-page";
-import CreateLogPage from "./create-log-page";
-import EditLogPage from "./edit-log-page";
+import Home from "./home";
+import Login from "./login";
+import Register from "./register";
+import Dashboard from "./dashboard";
+import CreateService from "./create-service";
+import EditService from "./edit-service";
+import ServiceList from "./service-list";
+import ServiceView from "./service-view";
 
 export default function App() {
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkAuth();
+    setLoading(false);
   }, []);
 
-  async function checkAuth() {
-    try {
-      const response = await fetch("http://localhost:8080/api/auth/profile", {
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-      }
-    } catch (error) {
-      console.error("Auth check failed:", error);
-    } finally {
-      setLoading(false);
-    }
+  if (loading) {
+    return <div className="loading">Loading...</div>;
   }
 
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="spinner"></div>
-      </div>
-    );
-  }
+  const isLoggedIn = !!localStorage.getItem("token");
 
   return (
     <Routes>
-      <Route path="/" element={<DashboardPage user={user} setUser={setUser} />} />
-      
+      <Route path="/" element={<Home />} />
       <Route
         path="/login"
-        element={user ? <Navigate to="/my-logs" /> : <LoginPage setUser={setUser} />}
+        element={isLoggedIn ? <Navigate to="/dashboard" /> : <Login />}
       />
-      
       <Route
         path="/register"
-        element={user ? <Navigate to="/my-logs" /> : <RegisterPage setUser={setUser} />}
+        element={isLoggedIn ? <Navigate to="/dashboard" /> : <Register />}
       />
-      
       <Route
-        path="/my-logs"
-        element={user ? <MyLogsPage user={user} setUser={setUser} /> : <Navigate to="/login" />}
+        path="/dashboard"
+        element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />}
       />
-      
       <Route
-        path="/create-log"
-        element={user ? <CreateLogPage user={user} setUser={setUser} /> : <Navigate to="/login" />}
+        path="/services"
+        element={<ServiceList />}
       />
-      
       <Route
-        path="/edit-log/:id"
-        element={user ? <EditLogPage user={user} setUser={setUser} /> : <Navigate to="/login" />}
+        path="/services/:id"
+        element={<ServiceView />}
       />
-      
+      <Route
+        path="/create-service"
+        element={isLoggedIn ? <CreateService /> : <Navigate to="/login" />}
+      />
+      <Route
+        path="/edit-service/:id"
+        element={isLoggedIn ? <EditService /> : <Navigate to="/login" />}
+      />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
