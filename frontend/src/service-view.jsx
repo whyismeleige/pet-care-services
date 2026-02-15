@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import styles from "./styles.module.css";
 
 export default function ServiceView() {
@@ -26,11 +26,9 @@ export default function ServiceView() {
         setService(data);
       } else {
         alert(data.error || "Failed to load service");
-        navigate("/services");
       }
     } catch (error) {
       alert("Network error");
-      navigate("/services");
     } finally {
       setLoading(false);
     }
@@ -83,20 +81,41 @@ export default function ServiceView() {
   return (
     <div className={styles.container}>
       <nav className={styles.navbar}>
-        <div className={styles.navBrand}>
-          <h2>Pet Care Services</h2>
-        </div>
-        <div className={styles.navLinks}>
-          <Link to="/dashboard">Dashboard</Link>
-          <Link to="/services">All Services</Link>
-          {localStorage.getItem("token") && (
-            <>
-              <Link to="/create-service">Create Service</Link>
-              <button onClick={handleLogout} className={styles.logoutButton}>
-                Logout
-              </button>
-            </>
-          )}
+        <div className={styles.navContainer}>
+          <div className={styles.navBrand}>
+            <span className={styles.navBrandIcon}>🐾</span>
+            Pet Care Services
+          </div>
+          <div className={styles.navLinks}>
+            {localStorage.getItem("token") ? (
+              <>
+                <Link to="/dashboard" className={styles.navLink}>
+                  Dashboard
+                </Link>
+                <Link to="/services" className={styles.navLink}>
+                  All Services
+                </Link>
+                <Link to="/create-service" className={styles.navLink}>
+                  Create Service
+                </Link>
+                <button onClick={handleLogout} className={styles.logoutButton}>
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/" className={styles.navLink}>
+                  Home
+                </Link>
+                <Link to="/login" className={styles.navLink}>
+                  Login
+                </Link>
+                <Link to="/register">
+                  <button className={styles.navButton}>Get Started</button>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </nav>
 
@@ -104,7 +123,7 @@ export default function ServiceView() {
         <div className={styles.serviceDetail}>
           <div className={styles.serviceDetailHeader}>
             <Link to="/services" className={styles.backLink}>
-              ← Back to Services
+              Back to Services
             </Link>
             <div className={styles.serviceCategory}>{service.category}</div>
           </div>
@@ -114,12 +133,12 @@ export default function ServiceView() {
 
           <div className={styles.serviceDetailInfo}>
             <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>Price:</span>
-              <span className={styles.price}>${service.price}</span>
+              <span className={styles.infoLabel}>Price</span>
+              <span className={styles.infoValue}>${service.price}</span>
             </div>
             <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>Duration:</span>
-              <span>{service.duration}</span>
+              <span className={styles.infoLabel}>Duration</span>
+              <span className={styles.infoValue}>{service.duration}</span>
             </div>
           </div>
 

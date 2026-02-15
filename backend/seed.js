@@ -1,17 +1,17 @@
 require("dotenv").config();
-const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const db = require("./models"); // Ensure this path points to your models/index.js
+const { MongoClient, ObjectId } = require("mongodb");
 
 const MONGODB_URI = process.env.MONGODB_URI;
-const DB_NAME = process.env.DB_NAME;
 
 if (!MONGODB_URI) {
-  console.error("Missing MONGODB_URI in .env");
+  console.error("❌ Missing MONGODB_URI in .env");
   process.exit(1);
 }
 
-// --- Constants & Data ---
+// ==============================================
+// SEED DATA
+// ==============================================
 
 const INDIAN_USERS = [
   ["Aarav Patel", "aarav.patel"],
@@ -26,129 +26,223 @@ const INDIAN_USERS = [
   ["Shaurya Verma", "shaurya.verma"],
 ];
 
-const TRAVEL_DESTINATIONS = [
+const PET_SERVICES = [
   {
-    location: "Jaipur, Rajasthan",
-    titles: ["The Pink City Adventure", "Royalty at Hawa Mahal", "Sunset at Nahargarh Fort"],
-    image: "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&q=80&w=1000",
-    desc: "Explored the magnificent forts and palaces. The local food was spicy and delicious. Hawa Mahal looked stunning in the morning light."
+    category: "Dog Walking",
+    services: [
+      {
+        name: "Morning Dog Walk",
+        description: "Start your dog's day right with a refreshing morning walk. Perfect for energetic dogs who need exercise before you head to work.",
+        prices: [15, 20, 25],
+        durations: ["30 minutes", "45 minutes", "1 hour"],
+      },
+      {
+        name: "Evening Park Adventure",
+        description: "Let your furry friend socialize and play at the local dog park. Includes playtime and exercise with other friendly dogs.",
+        prices: [20, 25, 30],
+        durations: ["45 minutes", "1 hour", "1.5 hours"],
+      },
+      {
+        name: "Weekend Trail Hiking",
+        description: "Take your adventurous pup on scenic trail hikes. Great for dogs who love exploring nature and need extra exercise.",
+        prices: [35, 40, 50],
+        durations: ["1 hour", "1.5 hours", "2 hours"],
+      },
+    ],
   },
   {
-    location: "Goa, India",
-    titles: ["Beach Vibes Only", "Relaxing at Palolem", "Goa Sunsets"],
-    image: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&q=80&w=1000",
-    desc: "Spent the weekend chilling by the beach. The seafood was fresh, and the evening breeze was perfect. Highly recommend renting a scooter to explore."
+    category: "Pet Sitting",
+    services: [
+      {
+        name: "Overnight Pet Care",
+        description: "Your pet stays comfortable in their own home while you're away. Includes feeding, playtime, and lots of cuddles.",
+        prices: [40, 50, 60],
+        durations: ["per night", "per night", "per night"],
+      },
+      {
+        name: "Day Care Services",
+        description: "Drop off your pet for the day while you're at work. Full supervision, playtime, and meals included.",
+        prices: [25, 30, 35],
+        durations: ["per day", "per day", "per day"],
+      },
+      {
+        name: "Weekend Boarding",
+        description: "Weekend getaway? Your pet will be well taken care of with regular walks, meals, and attention.",
+        prices: [80, 100, 120],
+        durations: ["per weekend", "per weekend", "per weekend"],
+      },
+    ],
   },
   {
-    location: "Manali, Himachal Pradesh",
-    titles: ["Snowy Escapades", "Trekking in the Himalayas", "Manali Diaries"],
-    image: "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=1000",
-    desc: "The mountains were calling! Experience the fresh mountain air and the breathtaking views of the snow-capped peaks. Solang Valley was a highlight."
+    category: "Grooming",
+    services: [
+      {
+        name: "Basic Bath & Brush",
+        description: "Complete bath with premium shampoo, blow dry, and thorough brushing. Your pet will smell amazing!",
+        prices: [30, 40, 50],
+        durations: ["1 hour", "1.5 hours", "2 hours"],
+      },
+      {
+        name: "Full Grooming Package",
+        description: "Bath, haircut, nail trim, ear cleaning, and teeth brushing. Everything your pet needs to look and feel their best.",
+        prices: [60, 75, 90],
+        durations: ["2 hours", "2.5 hours", "3 hours"],
+      },
+      {
+        name: "Nail Trimming Service",
+        description: "Quick and stress-free nail trimming for dogs and cats. Keep your pet's paws healthy and comfortable.",
+        prices: [15, 20, 25],
+        durations: ["15 minutes", "20 minutes", "30 minutes"],
+      },
+    ],
   },
   {
-    location: "Kerala, India",
-    titles: ["Backwaters Bliss", "Houseboat Stay", "God's Own Country"],
-    image: "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&q=80&w=1000",
-    desc: "Cruising through the backwaters of Alleppey was serene. The greenery is unmatched. Enjoyed authentic Kerala sadhya on a banana leaf."
+    category: "Training",
+    services: [
+      {
+        name: "Puppy Basic Training",
+        description: "Essential commands for puppies: sit, stay, come, and leash training. Build a strong foundation early.",
+        prices: [50, 60, 75],
+        durations: ["1 hour", "1 hour", "1.5 hours"],
+      },
+      {
+        name: "Behavioral Correction",
+        description: "Address issues like excessive barking, jumping, or aggression. Personalized training plans for your pet.",
+        prices: [70, 85, 100],
+        durations: ["1 hour", "1.5 hours", "2 hours"],
+      },
+      {
+        name: "Advanced Obedience",
+        description: "Take your dog's training to the next level with off-leash commands, recall training, and advanced tricks.",
+        prices: [80, 95, 110],
+        durations: ["1.5 hours", "2 hours", "2 hours"],
+      },
+    ],
   },
   {
-    location: "Kyoto, Japan",
-    titles: ["Cherry Blossoms in Spring", "Temple Run in Kyoto", "Japanese Zen"],
-    image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&q=80&w=1000",
-    desc: "Walked through the Fushimi Inari shrine. The torii gates seem endless. The city mixes tradition and modernity perfectly."
+    category: "Veterinary",
+    services: [
+      {
+        name: "Health Check-up",
+        description: "Comprehensive wellness exam including vitals check, weight monitoring, and general health assessment.",
+        prices: [50, 60, 70],
+        durations: ["30 minutes", "45 minutes", "1 hour"],
+      },
+      {
+        name: "Vaccination Service",
+        description: "Keep your pet protected with up-to-date vaccinations. Includes rabies, distemper, and other essential vaccines.",
+        prices: [40, 50, 60],
+        durations: ["20 minutes", "30 minutes", "30 minutes"],
+      },
+      {
+        name: "Dental Cleaning",
+        description: "Professional dental cleaning to prevent gum disease and keep your pet's teeth healthy and strong.",
+        prices: [100, 120, 150],
+        durations: ["1 hour", "1.5 hours", "2 hours"],
+      },
+    ],
   },
-  {
-    location: "Paris, France",
-    titles: ["Eiffel Tower at Night", "Louvre Museum Visit", "Parisian Cafes"],
-    image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=1000",
-    desc: "The city of love lived up to its name. Saw the Mona Lisa and enjoyed croissants at a street-side cafe. The architecture is stunning."
-  },
-  {
-    location: "Bali, Indonesia",
-    titles: ["Ubud Rice Terraces", "Island Hopping", "Bali Spiritual Retreat"],
-    image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=1000",
-    desc: "Bali is a tropical paradise. The rice terraces in Ubud are lush green. Great place for yoga and meditation."
-  }
 ];
 
 const SEED_PASSWORD = "password123";
 
-// --- Helpers ---
+// ==============================================
+// HELPER FUNCTIONS
+// ==============================================
 
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
 function randomDate(start, end) {
-  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+  return new Date(
+    start.getTime() + Math.random() * (end.getTime() - start.getTime())
+  );
 }
 
-// --- Main Seed Function ---
+// ==============================================
+// MAIN SEED FUNCTION
+// ==============================================
 
 async function seed() {
-  try {
-    // 1. Connect to Database
-    await mongoose.connect(MONGODB_URI, { dbName: DB_NAME || undefined });
-    console.log("Connected to MongoDB");
+  const mongoClient = new MongoClient(MONGODB_URI);
 
-    const { user: User, travelLog: TravelLog } = db;
+  try {
+    console.log("🌱 Starting seed process...\n");
+
+    // 1. Connect to Database
+    await mongoClient.connect();
+    const db = mongoClient.db("petcare");
+    console.log("✅ Connected to MongoDB");
+
+    const usersCollection = db.collection("users");
+    const servicesCollection = db.collection("services");
 
     // 2. Clear existing data
-    await TravelLog.deleteMany({});
-    await User.deleteMany({});
-    console.log("Cleared existing users and travel logs");
+    await servicesCollection.deleteMany({});
+    await usersCollection.deleteMany({});
+    console.log("🗑️  Cleared existing users and services\n");
 
     // 3. Create Users
-    const hashedPassword = await bcrypt.hash(SEED_PASSWORD, 12);
-    
+    const hashedPassword = await bcrypt.hash(SEED_PASSWORD, 10);
+
     const userDocs = INDIAN_USERS.map(([name, prefix]) => ({
       name,
       email: `${prefix}@example.com`,
       password: hashedPassword,
+      createdAt: new Date(),
     }));
 
-    const createdUsers = await User.insertMany(userDocs);
-    console.log(`Created ${createdUsers.length} users`);
+    const usersResult = await usersCollection.insertMany(userDocs);
+    const createdUserIds = Object.values(usersResult.insertedIds);
+    console.log(`✅ Created ${createdUserIds.length} users`);
 
-    // 4. Create Travel Logs
-    const travelLogDocs = [];
+    // 4. Create Pet Services
+    const serviceDocs = [];
 
-    // Loop through each user and assign 2-5 random trips
-    createdUsers.forEach((user) => {
-      const numberOfTrips = Math.floor(Math.random() * 4) + 2; // Random 2 to 5 trips
+    createdUserIds.forEach((userId) => {
+      const numberOfServices = Math.floor(Math.random() * 4) + 2; // 2-5 services per user
 
-      for (let i = 0; i < numberOfTrips; i++) {
-        const destination = pick(TRAVEL_DESTINATIONS);
-        const tripDate = randomDate(new Date(2023, 0, 1), new Date()); // Random date in last ~2 years
-        
-        travelLogDocs.push({
-          user: user._id,
-          title: pick(destination.titles),
-          location: destination.location,
-          description: destination.desc,
-          travelDate: tripDate,
-          imageUrl: destination.image,
+      for (let i = 0; i < numberOfServices; i++) {
+        const categoryData = pick(PET_SERVICES);
+        const serviceTemplate = pick(categoryData.services);
+        const priceIndex = Math.floor(Math.random() * serviceTemplate.prices.length);
+
+        serviceDocs.push({
+          name: serviceTemplate.name,
+          description: serviceTemplate.description,
+          price: serviceTemplate.prices[priceIndex],
+          duration: serviceTemplate.durations[priceIndex],
+          category: categoryData.category,
+          userId: userId,
+          createdAt: randomDate(new Date(2024, 0, 1), new Date()),
         });
       }
     });
 
-    await TravelLog.insertMany(travelLogDocs);
-    console.log(`Created ${travelLogDocs.length} travel logs`);
+    await servicesCollection.insertMany(serviceDocs);
+    console.log(`✅ Created ${serviceDocs.length} pet care services\n`);
 
     // 5. Success Message
-    console.log("\n--- Seed Complete ---");
-    console.log(`Sample Login: ${INDIAN_USERS[0][1]}@example.com`);
-    console.log(`Password: ${SEED_PASSWORD}`);
-
-  } catch (err) {
-    console.error("Seed failed:", err);
+    console.log("═══════════════════════════════════════");
+    console.log("🎉 SEED COMPLETED SUCCESSFULLY!");
+    console.log("═══════════════════════════════════════");
+    console.log(`\n📧 Sample Login Credentials:`);
+    console.log(`   Email: ${INDIAN_USERS[0][1]}@example.com`);
+    console.log(`   Password: ${SEED_PASSWORD}\n`);
+    console.log(`👥 Total Users: ${createdUserIds.length}`);
+    console.log(`🐾 Total Services: ${serviceDocs.length}`);
+    console.log("═══════════════════════════════════════\n");
+  } catch (error) {
+    console.error("❌ Seed failed:", error);
     process.exit(1);
   } finally {
     // 6. Disconnect
-    await mongoose.disconnect();
-    console.log("Disconnected from MongoDB");
+    await mongoClient.close();
+    console.log("✅ Disconnected from MongoDB");
     process.exit(0);
   }
 }
 
+// Run the seed
 seed();

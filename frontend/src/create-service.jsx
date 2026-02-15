@@ -52,16 +52,25 @@ export default function CreateService() {
   return (
     <div className={styles.container}>
       <nav className={styles.navbar}>
-        <div className={styles.navBrand}>
-          <h2>Pet Care Services</h2>
-        </div>
-        <div className={styles.navLinks}>
-          <Link to="/dashboard">Dashboard</Link>
-          <Link to="/services">All Services</Link>
-          <Link to="/create-service">Create Service</Link>
-          <button onClick={handleLogout} className={styles.logoutButton}>
-            Logout
-          </button>
+        <div className={styles.navContainer}>
+          <div className={styles.navBrand}>
+            <span className={styles.navBrandIcon}>🐾</span>
+            Pet Care Services
+          </div>
+          <div className={styles.navLinks}>
+            <Link to="/dashboard" className={styles.navLink}>
+              Dashboard
+            </Link>
+            <Link to="/services" className={styles.navLink}>
+              All Services
+            </Link>
+            <Link to="/create-service" className={styles.navLink}>
+              Create Service
+            </Link>
+            <button onClick={handleLogout} className={styles.logoutButton}>
+              Logout
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -90,7 +99,6 @@ export default function CreateService() {
               <label className={styles.label}>Description</label>
               <textarea
                 required
-                rows="4"
                 className={styles.textarea}
                 value={formData.description}
                 onChange={(e) =>
@@ -105,8 +113,6 @@ export default function CreateService() {
                 <input
                   type="number"
                   required
-                  min="0"
-                  step="0.01"
                   className={styles.input}
                   value={formData.price}
                   onChange={(e) =>
@@ -133,7 +139,6 @@ export default function CreateService() {
             <div className={styles.formGroup}>
               <label className={styles.label}>Category</label>
               <select
-                required
                 className={styles.select}
                 value={formData.category}
                 onChange={(e) =>
@@ -142,26 +147,21 @@ export default function CreateService() {
               >
                 <option value="Dog Walking">Dog Walking</option>
                 <option value="Pet Sitting">Pet Sitting</option>
-                <option value="Pet Grooming">Pet Grooming</option>
-                <option value="Pet Training">Pet Training</option>
-                <option value="Veterinary Care">Veterinary Care</option>
-                <option value="Other">Other</option>
+                <option value="Grooming">Grooming</option>
+                <option value="Training">Training</option>
+                <option value="Veterinary">Veterinary</option>
               </select>
             </div>
 
             <div className={styles.formActions}>
               <button
                 type="button"
-                onClick={() => navigate("/services")}
                 className={styles.cancelButton}
+                onClick={() => navigate("/services")}
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className={styles.button}
-              >
+              <button type="submit" disabled={loading} className={styles.button}>
                 {loading ? "Creating..." : "Create Service"}
               </button>
             </div>

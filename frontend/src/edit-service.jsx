@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import styles from "./styles.module.css";
 
 export default function EditService() {
@@ -32,17 +32,15 @@ export default function EditService() {
         setFormData({
           name: data.name,
           description: data.description,
-          price: data.price.toString(),
+          price: data.price,
           duration: data.duration,
           category: data.category,
         });
       } else {
         alert(data.error || "Failed to load service");
-        navigate("/services");
       }
     } catch (error) {
       alert("Network error");
-      navigate("/services");
     } finally {
       setLoadingService(false);
     }
@@ -54,17 +52,14 @@ export default function EditService() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
-        `http://localhost:5000/api/services/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + token,
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      const response = await fetch(`http://localhost:5000/api/services/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify(formData),
+      });
 
       const data = await response.json();
 
@@ -94,16 +89,25 @@ export default function EditService() {
   return (
     <div className={styles.container}>
       <nav className={styles.navbar}>
-        <div className={styles.navBrand}>
-          <h2>Pet Care Services</h2>
-        </div>
-        <div className={styles.navLinks}>
-          <Link to="/dashboard">Dashboard</Link>
-          <Link to="/services">All Services</Link>
-          <Link to="/create-service">Create Service</Link>
-          <button onClick={handleLogout} className={styles.logoutButton}>
-            Logout
-          </button>
+        <div className={styles.navContainer}>
+          <div className={styles.navBrand}>
+            <span className={styles.navBrandIcon}>🐾</span>
+            Pet Care Services
+          </div>
+          <div className={styles.navLinks}>
+            <Link to="/dashboard" className={styles.navLink}>
+              Dashboard
+            </Link>
+            <Link to="/services" className={styles.navLink}>
+              All Services
+            </Link>
+            <Link to="/create-service" className={styles.navLink}>
+              Create Service
+            </Link>
+            <button onClick={handleLogout} className={styles.logoutButton}>
+              Logout
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -130,7 +134,6 @@ export default function EditService() {
               <label className={styles.label}>Description</label>
               <textarea
                 required
-                rows="4"
                 className={styles.textarea}
                 value={formData.description}
                 onChange={(e) =>
@@ -145,8 +148,6 @@ export default function EditService() {
                 <input
                   type="number"
                   required
-                  min="0"
-                  step="0.01"
                   className={styles.input}
                   value={formData.price}
                   onChange={(e) =>
@@ -160,7 +161,6 @@ export default function EditService() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g., 1 hour"
                   className={styles.input}
                   value={formData.duration}
                   onChange={(e) =>
@@ -173,7 +173,6 @@ export default function EditService() {
             <div className={styles.formGroup}>
               <label className={styles.label}>Category</label>
               <select
-                required
                 className={styles.select}
                 value={formData.category}
                 onChange={(e) =>
@@ -182,26 +181,21 @@ export default function EditService() {
               >
                 <option value="Dog Walking">Dog Walking</option>
                 <option value="Pet Sitting">Pet Sitting</option>
-                <option value="Pet Grooming">Pet Grooming</option>
-                <option value="Pet Training">Pet Training</option>
-                <option value="Veterinary Care">Veterinary Care</option>
-                <option value="Other">Other</option>
+                <option value="Grooming">Grooming</option>
+                <option value="Training">Training</option>
+                <option value="Veterinary">Veterinary</option>
               </select>
             </div>
 
             <div className={styles.formActions}>
               <button
                 type="button"
-                onClick={() => navigate(`/services/${id}`)}
                 className={styles.cancelButton}
+                onClick={() => navigate(`/services/${id}`)}
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className={styles.button}
-              >
+              <button type="submit" disabled={loading} className={styles.button}>
                 {loading ? "Updating..." : "Update Service"}
               </button>
             </div>

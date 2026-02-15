@@ -132,6 +132,18 @@ app.get("/api/services", async (req, res) => {
   }
 });
 
+app.get("/api/services/user/my-services", verifyToken, async (req, res) => {
+  try {
+    const servicesCollection = db.collection("services");
+    const services = await servicesCollection
+      .find({ userId: new ObjectId(req.userId) })
+      .toArray();
+    res.json(services);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.get("/api/services/:id", async (req, res) => {
   try {
     const { id } = req.params;

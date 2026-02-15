@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import Home from "./home";
 import Login from "./login";
 import Register from "./register";
@@ -11,16 +11,18 @@ import ServiceView from "./service-view";
 
 export default function App() {
   const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
     setLoading(false);
-  }, []);
+  }, [location]);
 
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
-
-  const isLoggedIn = !!localStorage.getItem("token");
 
   return (
     <Routes>
@@ -37,14 +39,8 @@ export default function App() {
         path="/dashboard"
         element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />}
       />
-      <Route
-        path="/services"
-        element={<ServiceList />}
-      />
-      <Route
-        path="/services/:id"
-        element={<ServiceView />}
-      />
+      <Route path="/services" element={<ServiceList />} />
+      <Route path="/services/:id" element={<ServiceView />} />
       <Route
         path="/create-service"
         element={isLoggedIn ? <CreateService /> : <Navigate to="/login" />}

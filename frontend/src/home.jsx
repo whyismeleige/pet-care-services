@@ -5,30 +5,6 @@ export default function Home() {
   const navigate = useNavigate();
   const isLoggedIn = !!localStorage.getItem("token");
 
-  const services = [
-    {
-      title: "Dog Walking",
-      price: "$20/hr",
-      icon: "🐕",
-      iconClass: styles.serviceIconOrange,
-      description: "Professional care tailored to your pet's specific needs and routine.",
-    },
-    {
-      title: "Pet Sitting",
-      price: "$45/night",
-      icon: "❤️",
-      iconClass: styles.serviceIconRose,
-      description: "Professional care tailored to your pet's specific needs and routine.",
-    },
-    {
-      title: "Grooming",
-      price: "$30/visit",
-      icon: "🐱",
-      iconClass: styles.serviceIconBlue,
-      description: "Professional care tailored to your pet's specific needs and routine.",
-    },
-  ];
-
   function handleLogout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -38,28 +14,32 @@ export default function Home() {
 
   return (
     <div className={styles.homePage}>
-      {/* Navbar */}
       <nav className={styles.navbar}>
-        <div>
+        <div className={styles.navContainer}>
           <div className={styles.navBrand}>
-            <span style={{ fontSize: "24px" }}>🐾</span>
-            <h2>Pet Care Services</h2>
+            <span className={styles.navBrandIcon}>🐾</span>
+            Pet Care Services
           </div>
           <div className={styles.navLinks}>
-            <Link to="/">Home</Link>
-            <Link to="/services">Services</Link>
+            <Link to="/services" className={styles.navLink}>
+              Services
+            </Link>
             {isLoggedIn ? (
               <>
-                <Link to="/dashboard">Dashboard</Link>
+                <Link to="/dashboard" className={styles.navLink}>
+                  Dashboard
+                </Link>
                 <button onClick={handleLogout} className={styles.logoutButton}>
                   Logout
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login">Login</Link>
+                <Link to="/login" className={styles.navLink}>
+                  Login
+                </Link>
                 <Link to="/register">
-                  <button className={styles.button}>Get Started</button>
+                  <button className={styles.navButton}>Get Started</button>
                 </Link>
               </>
             )}
@@ -67,25 +47,18 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <section className={styles.heroSection}>
         <div className={styles.heroContainer}>
           <div className={styles.heroGrid}>
-            {/* Hero Text */}
             <div className={styles.heroText}>
               <div className={styles.heroBadge}>
-                <span className={styles.starIcon}>⭐</span> #1 Pet Care Service
+                <span>⭐</span> #1 Pet Care Service
               </div>
-
-              <h1 className={styles.heroTitle}>
-                Your Pet's Happy Place
-              </h1>
-
+              <h1 className={styles.heroTitle}>Your Pet's Happy Place</h1>
               <p className={styles.heroSubtitle}>
-                Connect with trusted, local pet sitters and walkers who'll treat
-                your furry friends like family.
+                Connect with trusted, local pet sitters and walkers who'll
+                treat your furry friends like family.
               </p>
-
               <div className={styles.heroButtons}>
                 {isLoggedIn ? (
                   <>
@@ -107,19 +80,16 @@ export default function Home() {
                   </>
                 )}
               </div>
-
-              {/* Trust Badges */}
               <div className={styles.trustBadges}>
                 <span className={styles.trustBadge}>
-                  <span className={styles.iconSm}>🛡️</span> Fully Insured
+                  <span>🛡️</span> Fully Insured
                 </span>
                 <span className={styles.trustBadge}>
-                  <span className={styles.iconSm}>✓</span> Vetted Sitters
+                  <span>✓</span> Vetted Sitters
                 </span>
               </div>
             </div>
 
-            {/* Hero Images (Bento Grid Style) */}
             <div className={styles.heroImages}>
               <div className={styles.bentoGrid}>
                 <img
@@ -144,70 +114,89 @@ export default function Home() {
                   />
                 </div>
               </div>
-
-              {/* Decorative blob */}
-              <div className={styles.heroImagesBlob}></div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Services Cards */}
       <section className={styles.servicesSection}>
         <div className={styles.servicesContainer}>
           <div className={styles.servicesHeader}>
             <h2 className={styles.servicesTitle}>Our Services</h2>
             <p className={styles.servicesSubtitle}>
-              Whether you're away for work or vacation, we have the perfect care
-              plan for your furry friend.
+              Whether you're away for work or vacation, we have the perfect
+              care plan for your furry friend.
             </p>
           </div>
 
           <div className={styles.servicesGrid}>
-            {services.map((service, i) => (
-              <div key={i} className={styles.serviceCard}>
-                <div className={`${styles.serviceIcon} ${service.iconClass}`}>
-                  {service.icon}
-                </div>
-                <h3 className={styles.serviceCardTitle}>{service.title}</h3>
-                <p className={styles.serviceCardDescription}>
-                  {service.description}
-                </p>
-                <div className={styles.serviceCardFooter}>
-                  <span className={styles.serviceCardPrice}>{service.price}</span>
-                  <div className={styles.serviceCardArrow}>→</div>
-                </div>
+            <div className={styles.serviceCardHome}>
+              <div className={`${styles.serviceIcon} ${styles.serviceIconOrange}`}>
+                🐕
               </div>
-            ))}
+              <h3 className={styles.serviceCardTitle}>Dog Walking</h3>
+              <p className={styles.serviceCardDescription}>
+                Professional care tailored to your pet's specific needs and
+                routine.
+              </p>
+              <div className={styles.serviceCardFooter}>
+                <span className={styles.serviceCardPrice}>$20/hr</span>
+                <div className={styles.serviceCardArrow}>→</div>
+              </div>
+            </div>
+
+            <div className={styles.serviceCardHome}>
+              <div className={`${styles.serviceIcon} ${styles.serviceIconRose}`}>
+                ❤️
+              </div>
+              <h3 className={styles.serviceCardTitle}>Pet Sitting</h3>
+              <p className={styles.serviceCardDescription}>
+                Professional care tailored to your pet's specific needs and
+                routine.
+              </p>
+              <div className={styles.serviceCardFooter}>
+                <span className={styles.serviceCardPrice}>$45/night</span>
+                <div className={styles.serviceCardArrow}>→</div>
+              </div>
+            </div>
+
+            <div className={styles.serviceCardHome}>
+              <div className={`${styles.serviceIcon} ${styles.serviceIconBlue}`}>
+                🐱
+              </div>
+              <h3 className={styles.serviceCardTitle}>Grooming</h3>
+              <p className={styles.serviceCardDescription}>
+                Professional care tailored to your pet's specific needs and
+                routine.
+              </p>
+              <div className={styles.serviceCardFooter}>
+                <span className={styles.serviceCardPrice}>$30/visit</span>
+                <div className={styles.serviceCardArrow}>→</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className={styles.ctaSection}>
         <div className={styles.ctaContainer}>
           <div className={styles.ctaBox}>
-            {/* Background Pattern */}
-            <div className={styles.ctaPattern}></div>
-
             <div className={styles.ctaContent}>
-              <h2 className={styles.ctaTitle}>Ready to wag tails?</h2>
+              <h2 className={styles.ctaTitle}>Ready to Get Started?</h2>
               <p className={styles.ctaText}>
-                Join our community of animal lovers today and get $20 off your
-                first booking.
+                Join thousands of happy pet owners who trust us with their
+                beloved companions.
               </p>
-              {!isLoggedIn && (
-                <Link to="/register" className={styles.ctaButton}>
-                  Sign Up Free
-                </Link>
-              )}
+              <Link to="/register" className={styles.ctaButton}>
+                Create Your Account
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
       <footer className={styles.homeFooter}>
-        © 2026 Pet Care Services. Made with love.
+        <p>© 2026 Pet Care Services. All rights reserved.</p>
       </footer>
     </div>
   );

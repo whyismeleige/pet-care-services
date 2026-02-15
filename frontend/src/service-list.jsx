@@ -45,18 +45,41 @@ export default function ServiceList() {
   return (
     <div className={styles.container}>
       <nav className={styles.navbar}>
-        <div className={styles.navBrand}>
-          <h2>Pet Care Services</h2>
-        </div>
-        <div className={styles.navLinks}>
-          <Link to="/dashboard">Dashboard</Link>
-          <Link to="/services">All Services</Link>
-          <Link to="/create-service">Create Service</Link>
-          {localStorage.getItem("token") && (
-            <button onClick={handleLogout} className={styles.logoutButton}>
-              Logout
-            </button>
-          )}
+        <div className={styles.navContainer}>
+          <div className={styles.navBrand}>
+            <span className={styles.navBrandIcon}>🐾</span>
+            Pet Care Services
+          </div>
+          <div className={styles.navLinks}>
+            {localStorage.getItem("token") ? (
+              <>
+                <Link to="/dashboard" className={styles.navLink}>
+                  Dashboard
+                </Link>
+                <Link to="/services" className={styles.navLink}>
+                  All Services
+                </Link>
+                <Link to="/create-service" className={styles.navLink}>
+                  Create Service
+                </Link>
+                <button onClick={handleLogout} className={styles.logoutButton}>
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/" className={styles.navLink}>
+                  Home
+                </Link>
+                <Link to="/login" className={styles.navLink}>
+                  Login
+                </Link>
+                <Link to="/register">
+                  <button className={styles.navButton}>Get Started</button>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </nav>
 
@@ -70,8 +93,8 @@ export default function ServiceList() {
           <div className={styles.emptyState}>
             <p>No services available yet</p>
             {localStorage.getItem("token") && (
-              <Link to="/create-service" className={styles.button}>
-                Create First Service
+              <Link to="/create-service">
+                <button className={styles.button}>Create First Service</button>
               </Link>
             )}
           </div>
