@@ -55,7 +55,7 @@ export default function CreateService() {
         <div className={styles.navContainer}>
           <div className={styles.navBrand}>
             <span className={styles.navBrandIcon}>🐾</span>
-            Pet Care Services
+            Pet Care+
           </div>
           <div className={styles.navLinks}>
             <Link to="/dashboard" className={styles.navLink}>
@@ -109,7 +109,7 @@ export default function CreateService() {
 
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label className={styles.label}>Price ($)</label>
+                <label className={styles.label}>Price (₹)</label>
                 <input
                   type="number"
                   required

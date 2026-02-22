@@ -46,9 +46,9 @@ export default function ServiceList() {
     <div className={styles.container}>
       <nav className={styles.navbar}>
         <div className={styles.navContainer}>
-          <div className={styles.navBrand}>
+          <div className={styles.navBrand} onClick={() => navigate("/")}>
             <span className={styles.navBrandIcon}>🐾</span>
-            Pet Care Services
+            Pet Care+
           </div>
           <div className={styles.navLinks}>
             {localStorage.getItem("token") ? (
@@ -106,7 +106,7 @@ export default function ServiceList() {
                 <h3>{service.name}</h3>
                 <p>{service.description}</p>
                 <div className={styles.serviceInfo}>
-                  <span className={styles.price}>${service.price}</span>
+                  <span className={styles.price}>₹{service.price}</span>
                   <span className={styles.duration}>{service.duration}</span>
                 </div>
                 <Link

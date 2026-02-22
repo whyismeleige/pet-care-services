@@ -40,7 +40,7 @@ export default function Login() {
     <div className={styles.authContainer}>
       <div className={styles.authBox}>
         <h1 className={styles.authTitle}>Welcome Back</h1>
-        <p className={styles.authSubtitle}>Login to Pet Care Services</p>
+        <p className={styles.authSubtitle}>Login to Pet Care+</p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>

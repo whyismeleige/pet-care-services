@@ -53,7 +53,7 @@ export default function Dashboard() {
         <div className={styles.navContainer}>
           <div className={styles.navBrand}>
             <span className={styles.navBrandIcon}>🐾</span>
-            Pet Care Services
+            Pet Care+
           </div>
           <div className={styles.navLinks}>
             <Link to="/dashboard" className={styles.navLink}>
@@ -102,7 +102,7 @@ export default function Dashboard() {
                   <h3>{service.name}</h3>
                   <p>{service.description}</p>
                   <div className={styles.serviceInfo}>
-                    <span className={styles.price}>${service.price}</span>
+                    <span className={styles.price}>₹{service.price}</span>
                     <span className={styles.duration}>{service.duration}</span>
                   </div>
                   <div className={styles.serviceCardActions}>

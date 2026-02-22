@@ -84,7 +84,7 @@ export default function ServiceView() {
         <div className={styles.navContainer}>
           <div className={styles.navBrand}>
             <span className={styles.navBrandIcon}>🐾</span>
-            Pet Care Services
+            Pet Care+
           </div>
           <div className={styles.navLinks}>
             {localStorage.getItem("token") ? (
@@ -134,7 +134,7 @@ export default function ServiceView() {
           <div className={styles.serviceDetailInfo}>
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Price</span>
-              <span className={styles.infoValue}>${service.price}</span>
+              <span className={styles.infoValue}>₹{service.price}</span>
             </div>
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>Duration</span>

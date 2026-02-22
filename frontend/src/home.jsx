@@ -18,7 +18,7 @@ export default function Home() {
         <div className={styles.navContainer}>
           <div className={styles.navBrand}>
             <span className={styles.navBrandIcon}>🐾</span>
-            Pet Care Services
+            Pet Care+
           </div>
           <div className={styles.navLinks}>
             <Link to="/services" className={styles.navLink}>
@@ -140,8 +140,7 @@ export default function Home() {
                 routine.
               </p>
               <div className={styles.serviceCardFooter}>
-                <span className={styles.serviceCardPrice}>$20/hr</span>
-                <div className={styles.serviceCardArrow}>→</div>
+                <span className={styles.serviceCardPrice}>₹20/hr</span>
               </div>
             </div>
 
@@ -155,8 +154,7 @@ export default function Home() {
                 routine.
               </p>
               <div className={styles.serviceCardFooter}>
-                <span className={styles.serviceCardPrice}>$45/night</span>
-                <div className={styles.serviceCardArrow}>→</div>
+                <span className={styles.serviceCardPrice}>₹45/night</span>
               </div>
             </div>
 
@@ -170,8 +168,7 @@ export default function Home() {
                 routine.
               </p>
               <div className={styles.serviceCardFooter}>
-                <span className={styles.serviceCardPrice}>$30/visit</span>
-                <div className={styles.serviceCardArrow}>→</div>
+                <span className={styles.serviceCardPrice}>₹30/visit</span>
               </div>
             </div>
           </div>
@@ -196,7 +193,7 @@ export default function Home() {
       </section>
 
       <footer className={styles.homeFooter}>
-        <p>© 2026 Pet Care Services. All rights reserved.</p>
+        <p>© 2026 Pet Care+. All rights reserved.</p>
       </footer>
     </div>
   );
